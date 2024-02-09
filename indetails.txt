@@ -1,0 +1,42 @@
+from ultralytics import YOLO
+import cv2
+
+# Load a model
+# model = YOLO('yolov8n.pt')  # load an official model
+model = YOLO("best.pt")  # load a custom model
+
+# Predict with the model
+# results = model('image.jpg')  # predict on an image
+
+results = model.predict("image.jpg")
+
+# Draw bounding boxes on the image
+img = cv2.imread("image.jpg")
+
+from PIL import Image
+img2 = Image.open("image.jpg")
+counter=0
+for result in results:
+    for i in range(len(result.boxes.xyxy)):
+        x1, y1, x2, y2 = result.boxes.xyxy[i].tolist()
+        cls = result.boxes.cls[i]
+        conf = result.boxes.conf[i]
+        label = f"{model.names[int(cls)]} {conf:.2f}"
+        cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
+        cv2.putText(
+            img,
+            label,
+            (int(x1), int(y1) - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+            2,
+        )
+        ''' crop the objects '''
+        crop = img2.crop((x1,y1,x2,y2))
+        counter = counter+1
+        crop.save(f"{counter}.jpg")
+
+
+# Save the image with the bounding boxes
+cv2.imwrite("output.jpg", img)
